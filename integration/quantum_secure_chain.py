@@ -2,6 +2,10 @@
 量子安全联盟链集成方案 | Quantum-Secure Consortium Chain
 BB84 QKD + Consortium Blockchain 完整融合方案
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import time
 import threading
 import json

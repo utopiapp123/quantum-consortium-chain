@@ -2,6 +2,10 @@
 联盟链核心 | Consortium Blockchain Core
 基于 PBFT 的联盟链实现，集成 QKD 密钥
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import json
 import time
 import threading

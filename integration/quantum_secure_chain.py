@@ -4,6 +4,10 @@ BB84 QKD + Consortium Blockchain 完整融合方案
 """
 import time
 import threading
+import json
+import hashlib
+from typing import List, Optional
+
 from bb84.bb84_qkd import BB84
 from blockchain.chain import ConsortiumChain
 from blockchain.block import Transaction, Block
@@ -35,16 +39,10 @@ class QuantumSecureChain:
         self.peer_nodes = peer_nodes or [node_id]
         self.bb84 = BB84(key_length=256, eavesdrop_prob=0.0)
         self.chain = ConsortiumChain(node_id, self.peer_nodes)
-        self.qkd_keys = {}  # node_id → key
+        self.qkd_keys = {}
         self.secure = False
     
     def initialize_qkd(self, target_nodes: List[str] = None):
-        """
-        初始化 QKD 密钥分发
-        
-        Args:
-            target_nodes: 目标节点列表（模拟多个节点间的密钥分发）
-        """
         targets = target_nodes or self.peer_nodes
         print("\n" + "🔐 " + "=" * 54)
         print("  量子密钥分发初始化")
@@ -55,8 +53,6 @@ class QuantumSecureChain:
                 continue
             
             print(f"\n📡 {self.node_id} ←→ {target}")
-            
-            # 运行 BB84
             self.bb84 = BB84(key_length=256, eavesdrop_prob=0.05)
             key = self.bb84.run(verbose=False)
             
@@ -67,7 +63,6 @@ class QuantumSecureChain:
             else:
                 print(f"   ❌ QBER 过高，密钥丢弃")
         
-        # 使用第一个密钥保护联盟链
         if self.qkd_keys:
             primary_key = list(self.qkd_keys.values())[0]
             self.chain.set_qkd_key(primary_key)
@@ -80,18 +75,12 @@ class QuantumSecureChain:
     
     def send_secure_transaction(self, sender: str, receiver: str, 
                                 amount: float, data: dict = None) -> Transaction:
-        """发送量子安全交易"""
         if not self.secure:
             print("⚠️  链未激活量子安全保护！")
         
-        tx = Transaction(
-            sender=sender,
-            receiver=receiver,
-            amount=amount,
-            data=data or {}
-        )
+        tx = Transaction(sender=sender, receiver=receiver,
+                         amount=amount, data=data or {})
         
-        # QKD 加密交易数据
         if self.chain.qkd_key:
             encrypted_data = hashlib.sha256(
                 (json.dumps(tx.to_dict(), sort_keys=True) + 
@@ -103,7 +92,6 @@ class QuantumSecureChain:
         return tx
     
     def mine_block(self) -> Optional[Block]:
-        """出块（QKD签名）"""
         block = self.chain.create_block()
         if block:
             success = self.chain.propose_block(block)
@@ -112,17 +100,14 @@ class QuantumSecureChain:
         return None
     
     def run_demo(self):
-        """运行完整演示"""
         print("\n" + "🌌 " + "=" * 56)
         print("   量子安全联盟链 | Quantum-Secure Consortium Chain")
         print("   BB84 QKD × PBFT Consensus")
         print("=" * 58)
         
-        # Phase 1: QKD
         print("\n▶ Phase 1: 量子密钥分发")
         self.initialize_qkd(["Node-A", "Node-B", "Node-C"])
         
-        # Phase 2: 量子安全交易
         print("▶ Phase 2: 量子安全交易")
         tx1 = self.send_secure_transaction("Alice", "Bob", 100, 
                                            {"note": "量子安全转账"})
@@ -131,12 +116,10 @@ class QuantumSecureChain:
         tx3 = self.send_secure_transaction("Charlie", "Alice", 30,
                                            {"note": "跨链量子密钥"})
         
-        # Phase 3: 出块
         print("\n▶ Phase 3: PBFT 共识出块")
         time.sleep(0.5)
         block1 = self.mine_block()
         
-        # 更多交易
         self.send_secure_transaction("Alice", "Charlie", 25,
                                      {"note": "量子安全投票"})
         self.send_secure_transaction("Bob", "Alice", 15,
@@ -144,17 +127,14 @@ class QuantumSecureChain:
         time.sleep(0.5)
         block2 = self.mine_block()
         
-        # Phase 4: 验证
         print("\n▶ Phase 4: 链完整性验证")
         self.chain.validate_chain()
         
-        # Phase 5: 统计
         print("\n▶ Phase 5: 链状态")
         stats = self.chain.get_stats()
         for k, v in stats.items():
             print(f"  {k}: {v}")
         
-        # 对抗窃听测试
         print("\n" + "⚠️ " + "=" * 56)
         print("   窃听攻击模拟")
         print("=" * 58)
@@ -173,6 +153,6 @@ class QuantumSecureChain:
         print("  🎉 量子安全联盟链 演示完成")
         print("=" * 58)
 
-import hashlib
-import json
-from typing import List, Optional
+if __name__ == "__main__":
+    chain = QuantumSecureChain("Node-A")
+    chain.run_demo()
